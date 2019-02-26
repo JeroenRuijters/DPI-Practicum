@@ -5,11 +5,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Properties;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -19,12 +15,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
-import javax.jms.*;
 
-import messaging.requestreply.JMSCommunicator;
+import Gateway.LoanBankAppGateway;
 import model.bank.*;
 import messaging.requestreply.RequestReply;
-import org.apache.activemq.command.ActiveMQObjectMessage;
 
 public class JMSBankFrame extends JFrame {
 
@@ -36,7 +30,9 @@ public class JMSBankFrame extends JFrame {
 	private JTextField tfReply;
 	private DefaultListModel<RequestReply<BankInterestRequest, BankInterestReply>> listModel = new DefaultListModel<RequestReply<BankInterestRequest, BankInterestReply>>();
 	private Boolean isConnected = false;
-	
+
+	LoanBankAppGateway gateway;
+
 	/**
 	 * Launch the application.
 	 */
@@ -113,7 +109,7 @@ public class JMSBankFrame extends JFrame {
 					rr.setReply(reply);
 	                list.repaint();
 
-					JMSCommunicator.reply(reply, "BankInterestReply", rr.getRequest().getReplyDestination());
+					gateway.replyLoanRequest(rr);
 				}
 			}
 		});
@@ -127,20 +123,14 @@ public class JMSBankFrame extends JFrame {
 	private void setupConnection(){
 		isConnected = true;
 
-		JMSCommunicator.setupReceiver("BankInterestRequest", "BankInterestRequest", new MessageListener() {
+		gateway = new LoanBankAppGateway() {
 			@Override
-			public void onMessage(Message message) {
-				try {
-					ActiveMQObjectMessage msgObject = (ActiveMQObjectMessage) message;
-					BankInterestRequest bankInterestRqst = (BankInterestRequest) msgObject.getObject();
-					bankInterestRqst.setReplyDestination(message.getJMSReplyTo());
-					listModel.addElement(new RequestReply<>(bankInterestRqst, null));
-				}catch(JMSException e){
-					e.printStackTrace();
-				}
-
+			public void onBankInterestRequestReceived(BankInterestRequest bankRq) {
+				listModel.addElement(new RequestReply<>(bankRq, null));
 			}
-		});
+		};
+
+		gateway.listenForBankInterestRequest();
 	}
 
 }

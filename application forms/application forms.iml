@@ -6,7 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/abn amro" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/loan broker" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/loan client" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Gateways" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Gateway" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -21,6 +21,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.border.EmptyBorder;
 
+import Gateway.LoanClientAppGateway;
 import messaging.requestreply.JMSCommunicator;
 import messaging.requestreply.RequestReply;
 import model.loan.*;
@@ -121,21 +122,14 @@ public class LoanClientFrame extends JFrame {
 				LoanRequest request = new LoanRequest(ssn,amount,time);
 				listModel.addElement( new RequestReply<LoanRequest,LoanReply>(request, null));
 
-				Destination destination = JMSCommunicator.createDestination("LoanRequest", "LoanRequest");
-				JMSCommunicator.request(request, "LoanRequest", destination, new MessageListener() {
+				LoanClientAppGateway gateway = new LoanClientAppGateway() {
 					@Override
-					public void onMessage(Message message) {
-						try {
-							ActiveMQObjectMessage msgObject = (ActiveMQObjectMessage) message;
-							LoanReply loanRp = (LoanReply) msgObject.getObject();
-							getRequestReply(request).setReply(loanRp);
-							requestReplyList.repaint();
-						} catch (JMSException e) {
-							e.printStackTrace();
-						}
+					public void onLoanReply(LoanRequest loanRq, LoanReply loanRpl) {
+						getRequestReply(loanRq).setReply(loanRpl);
 					}
-				});
+				};
 
+				gateway.applyForLoan(request);
 			}
 		});
 		GridBagConstraints gbc_btnQueue = new GridBagConstraints();
